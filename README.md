@@ -13,6 +13,10 @@ If no name header is specified, SPHS will save the file with a default name with
 
 SPHS logs to the console by default. Optionally, a log file can also be specified. The default log file location is MyDocuments\SPHSLog.txt. Log times are in UTC. Logs are somewhat verbose, and will be worked on in the future. 
 
+
+To shutdown the server, send a post request with header Action and value Shutdown.
+    Invoke-WebRequest 192.168.10.1:1234 -Method POST -Headers @{"Action"="Shutdown"}
+
 ## Full usage
 Parameters:
 * URL
