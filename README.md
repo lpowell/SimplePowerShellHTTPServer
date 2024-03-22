@@ -13,10 +13,10 @@ Parameters:
 * URL
   * The url to bind to. Defaults to * if left blank.
 * Port
- * The port to bind to. Defaults to 80 if left blank.
+  * The port to bind to. Defaults to 80 if left blank.
 * Logging
- * Enable output logging. Times are UTC.
+  * Enable output logging. Times are UTC.
 * LogOutput
- * File to store the logs. Defaults to documents.
+  * File to store the logs. Defaults to documents.
 * Index
- * Specify an index.html file.
+  * Specify an index.html file.
