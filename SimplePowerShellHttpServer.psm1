@@ -251,7 +251,17 @@ File to store the logs. Defaults to documents.
                         $memStream.Close()
                     }
                 }
-                Default {}
+                "HEAD" {
+                    $Response.StatusCode = [System.Net.HttpStatusCode]::OK
+                    $Response.StatusDescription = "OK"
+                    $Response.OutputStream.Close()
+                }
+                Default {
+                    # Default NotFound status for methods not supported
+                    $Response.StatusCode = [System.Net.HttpStatusCode]::NotFound
+                    $Response.StatusDescription = "NotFound"
+                    $Response.OutputStream.Close()
+                }
             }
         }
     }
