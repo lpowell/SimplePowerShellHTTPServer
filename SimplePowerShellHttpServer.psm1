@@ -139,54 +139,81 @@ Specify an index.html file.
                     # Build the request path by stripping the url prefix 
                     $RequestPath=(Get-Location).Path + "\" + ((($Request.Url).ToString()) -replace ".*/")
                     Write-Log "Client requested file:$RequestPath"
+                    # Create a fileinfo object
+                    $RequestFileInfo = New-Object System.IO.FileInfo($RequestPath)
                     # Test if the file exists
-                    if([System.IO.File]::Exists($RequestPath)){
+                    if($RequestFileInfo.Exists){
                         Write-Log "File exists"
-                        # Attempt to send the file.
-                        try {
-                            # Create a filestream object for reading the desired file
-                            [System.IO.FileStream] $FileStream = New-Object System.IO.FileStream($RequestPath, "Open")
-                            $filename = ($RequestPath | Get-Item).Name
-                            $Response.ContentLength64 = $FileStream.Length
-                            $Response.SendChunked = $false
-                            # Send information on the requested file. Content-Type is not included in this configuration.
-                            $Response.AddHeader("Content-disposition","attachment; filename=" +$filename)
-                            # Create a buffer to hold the data
-                            [byte[]] $Buffer = [System.Byte[]]::CreateInstance([System.Byte], 64 * 1024)
-                            # Create a binary writer object
-                            [System.IO.BinaryWriter] $BinaryWriter = $Response.OutputStream
-                            # Write the data to the output stream
-                            for($read > 0;$read = $FileStream.Read($Buffer,0,$Buffer.Length); $read = $FileStream.Read($Buffer,0,$Buffer.Length)){
-                                $BinaryWriter.Write($Buffer, 0, $read)
-                                $BinaryWriter.Flush()
+                        # Test if file should be served as webpage
+                        if($RequestFileInfo.Extension -in (".html",".php")){
+                            Write-Log "Serving file as webpage"
+                            # Get file contents
+                            [string] $responseString = Get-Content $RequestPath
+                            # Create buffer for response
+                            [byte[]] $Buffer = [System.Text.Encoding]::UTF8.GetBytes($responseString)
+                            # Set content length to the buffer size
+                            $Response.ContentLength64 = $Buffer.Length
+                            # Create an output stream to send the response
+                            [System.IO.Stream] $Output = $Response.OutputStream
+                            # Send response
+                            $Output.Write($Buffer,0,$Buffer.Length)
+                            # Close output stream
+                            $Output.Close()
+                        }else{
+                            # Attempt to send the file.
+                            try {
+                                Write-Log "Sending file as download"
+                                # Create a filestream object for reading the desired file
+                                [System.IO.FileStream] $FileStream = New-Object System.IO.FileStream($RequestPath, "Open")
+                                $filename = ($RequestPath | Get-Item).Name
+                                $Response.ContentLength64 = $FileStream.Length
+                                $Response.SendChunked = $false
+                                # Send information on the requested file. Content-Type is not included in this configuration.
+                                $Response.AddHeader("Content-disposition","attachment; filename=" +$filename)
+                                # Create a buffer to hold the data
+                                [byte[]] $Buffer = [System.Byte[]]::CreateInstance([System.Byte], 64 * 1024)
+                                # Create a binary writer object
+                                [System.IO.BinaryWriter] $BinaryWriter = $Response.OutputStream
+                                # Write the data to the output stream
+                                for($read > 0;$read = $FileStream.Read($Buffer,0,$Buffer.Length); $read = $FileStream.Read($Buffer,0,$Buffer.Length)){
+                                    $BinaryWriter.Write($Buffer, 0, $read)
+                                    $BinaryWriter.Flush()
+                                }
+                                # Close streams
+                                $BinaryWriter.Close()
+                                $FileStream.Close()
+                                Write-Log "File sent: $RequestPath"
+                                $Response.StatusCode = [System.Net.HttpStatusCode]::OK
+                                $Response.StatusDescription = "OK"
+                                $Response.OutputStream.Close()
                             }
-                            # Close streams
-                            $BinaryWriter.Close()
-                            $FileStream.Close()
-                            Write-Log "File sent: $RequestPath"
-                            $Response.StatusCode = [System.Net.HttpStatusCode]::OK
-                            $Response.StatusDescription = "OK"
-                            $Response.OutputStream.Close()
-                        }
-                        catch {
-                            Write-Log "Something went wrong. Check errors."
-                            Write-Log ($_.ScriptStackTrace).ToString()
-                            Write-Log ($_.Exception).ToString()
-                            Write-Log ($_.FullyQualifiedErrorId).ToString()
-                            # Catch on error and terminate active stream objects
-                            $BinaryWriter.Close()
-                            $FileStream.Close()
-                            # Send a BadRequest status if the send fails for any reason.
-                            $Response.StatusCode = [System.Net.HttpStatusCode]::BadRequest
-                            $Response.StatusDescription = "BadRequest"
-                            $Response.OutputStream.Close()
+                            catch {
+                                Write-Log "Something went wrong. Check errors."
+                                Write-Log ($_.ScriptStackTrace).ToString()
+                                Write-Log ($_.Exception).ToString()
+                                Write-Log ($_.FullyQualifiedErrorId).ToString()
+                                # Catch on error and terminate active stream objects
+                                $BinaryWriter.Close()
+                                $FileStream.Close()
+                                # Send a BadRequest status if the send fails for any reason.
+                                $Response.StatusCode = [System.Net.HttpStatusCode]::BadRequest
+                                $Response.StatusDescription = "BadRequest"
+                                $Response.OutputStream.Close()
+                            }
                         }
                     # If no file is requested, serve the default page.
                     }elseif(((($Request.Url).ToString()) -replace ".*/") -le 1){
                         Write-Log "Serving index file."
                         if($Index){
                             if(-Not [System.IO.File]::Exists($Index)){
-                                [string] $responseString = "<HTML><p>Specified index file not found.</p></HTML>"
+                                # try and see if it's in the local directory
+                                $loc = (Get-Location).Path + "\" + $Index
+                                if([System.IO.File]::Exists($loc)){
+                                    [string] $responseString = Get-Content $loc
+                                }else{
+                                    [string] $responseString = "<HTML><p>Specified index file not found.</p></HTML>"
+                                }                                
+
                             }else{
                                 [string] $responseString = Get-Content $Index
                             }

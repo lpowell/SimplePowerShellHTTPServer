@@ -1,6 +1,56 @@
 <HTML>
 <BODY>
-<p>This server is for testing purposes only.</p>
-<p>Please do not hack me.</p>
+<h1>Simple PowerShell HTTP Server</h1>
+<p><a href="https://github.com/lpowell/SimplePowerShellHTTPServer" target="_blank">Learn more!</a></p>
+<input id="Shutdown" type="button" value="Shutdown" onclick="Shutdown();" />
+<br />
+<br />
+<div id="LogOut">
+    <input type="file" name="inputfile" id="inputfile" value="Choose log file">
+    <br>
+ 
+    <pre id="output"></pre>
+ 
+    <script type="text/javascript">
+
+    </script>
+</div>
+<script>
+    const LogOut = document.getElementById('inputfile');
+    if(LogOut){
+        LogOut.addEventListener('change', function () {
+            var fr = new FileReader();
+            fr.onload = function () {
+                document.getElementById('output')
+                    .textContent = fr.result;
+            };
+            fr.readAsText(LogOut.files[0]);
+        });
+        setTimeout(function (){
+            var fr = new FileReader();
+            fr.onload = function () {
+                document.getElementById('output')
+                    .textContent = fr.result;
+            };
+            fr.readAsText(LogOut.files[0]);
+        }, 5000);
+    }
+    function Shutdown(){
+        const currentUrl = window.location.href;
+        fetch(currentUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                userId: 1,
+                title: "Shutdown",
+                completed: false
+            }),
+            headers: {
+                "Action": "Shutdown"
+            }
+        });
+        alert("Server shutdown requested.");
+        location.reload();
+    }
+</script>
 </BODY>
 </HTML>
