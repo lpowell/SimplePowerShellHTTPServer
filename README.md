@@ -15,6 +15,7 @@ SPHS logs to the console by default. Optionally, a log file can also be specifie
 
 
 To shutdown the server, send a post request with header Action and value Shutdown.
+
     Invoke-WebRequest 192.168.10.1:1234 -Method POST -Headers @{"Action"="Shutdown"}
 
 ## Full usage
