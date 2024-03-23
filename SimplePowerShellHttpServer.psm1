@@ -27,6 +27,9 @@ Enable output logging. Times are UTC.
 .PARAMETER LogOutput
 File to store the logs. Defaults to documents.
 
+.PARAMETER Index
+Specify an index.html file.
+
 
 .Example 
     # Start a server on localhost:80.
@@ -57,7 +60,11 @@ File to store the logs. Defaults to documents.
         # Log File
         [Parameter(Mandatory=$false,HelpMessage="File to store the logs. Defaults to documents.")]
         [string]
-        $LogOutput=[Environment]::GetFolderPath("MyDocuments")+"PoShttpLog.txt"
+        $LogOutput=[Environment]::GetFolderPath("MyDocuments")+"SPHSLog.txt",
+        # Index specification
+        [Parameter(Mandatory=$false,HelpMessage="Specify an index.html file.")]
+        [string]
+        $Index
     )
     # Initialize server
     Write-Log "Starting server..."
@@ -177,7 +184,13 @@ File to store the logs. Defaults to documents.
                     # If no file is requested, serve the default page.
                     }elseif(((($Request.Url).ToString()) -replace ".*/") -le 1){
                         Write-Log "Serving index file."
-                        if([System.IO.File]::Exists((Get-Location).Path+"\"+"index.html")){
+                        if($Index){
+                            if(-Not [System.IO.File]::Exists($Index)){
+                                [string] $responseString = "<HTML><p>Specified index file not found.</p></HTML>"
+                            }else{
+                                [string] $responseString = Get-Content $Index
+                            }
+                        }elseif([System.IO.File]::Exists((Get-Location).Path+"\"+"index.html")){
                             [string] $responseString = Get-Content "index.html"
                         }else{
                             [string] $responseString = "<HTML><p>Testing!</p></HTML>"
