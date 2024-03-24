@@ -1,5 +1,5 @@
 # Simple PowerShell HTTP Server
-A module for creating an HTTP server. SPHS will serve the index.html file in the directory it's run in by default. This can be overridden to any specified file. SPHS will also allow file upload and download. Any GET request for a file within the directory that SPHS is run will transfer the file. 
+A module for creating an HTTP server. SPHS will serve the index.html file in the directory it's run in by default. This can be overridden to any specified file. SPHS will also allow file upload and download. Any GET request for a file within the directory that SPHS is run will transfer the file. HTML and PHP files will be served in the browser.  
 
 The following will attempt to download a file called blue.txt from the server.
     
