@@ -1,27 +1,56 @@
 # Simple PowerShell HTTP Server
-A module for creating an HTTP server. SPHS will serve the index.html file in the directory it's run in by default. This can be overridden to any specified file. SPHS will also allow file upload and download. Any GET request for a file within the directory that SPHS is run will transfer the file. HTML and PHP files will be served in the browser.  
+A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work.
 
-The following will attempt to download a file called blue.txt from the server.
+
+## File Upload
+Files can be uploaded via post requests. An example is included in the provided index.html page. File upload can be sent through the command line as well, using either POST or PUT requests. Command line requests must include a name header.
     
-    curl 192.168.10.1:1234/blue.txt --output blue.txt
+PUT Request
     
-Uploading files was a function designed for a specific purpose within a personal project. Because of this, uploads must be formatted as the following.
+    Invoke-WebRequest 192.168.10.1:1234 -method PUT -InFile red.txt -Headers @{"Name"="red.txt"} 
+
+POST Request
+    
+    Invoke-WebRequest 192.168.10.1:1234 -method POST -Infile red.txt -Headers @{"Name"="red.txt"}
+
+## File Download
+Files can be downloaded from the command line or through the browser. For example, browsing to http://localhost/red.txt will result in the server sending red.txt for download. SPHS serves files in the directory it's running in. Files may also be downloaded from the command line.
+
+GET Request
    
-    Invoke-WebRequest 192.168.10.1:1234 -method PUT -InFile red.txt -Headers @{"Name"="red.txt"}
-    
-If no name header is specified, SPHS will save the file with a default name with no extension. 
+    curl 192.168.10.1:1234/blue.txt --output blue.txt
 
-SPHS logs to the console by default. Optionally, a log file can also be specified. The default log file location is MyDocuments\SPHSLog.txt. Log times are in UTC. Logs are somewhat verbose, and will be worked on in the future. 
+## Server Operation
+The server can be shut down by sending any request with the Action header. Additionally, the sample index page includes a shutdown button.
 
-
-To shutdown the server, send a post request with header Action and value Shutdown.
+Server shutdown
 
     Invoke-WebRequest 192.168.10.1:1234 -Method POST -Headers @{"Action"="Shutdown"}
 
-## Full usage
-Parameters:
+SPHS logs to the console by default. Currently, this cannot be turned off. Optionally, SPHS can log to a file. Use the -Logging switch to enable file output, and the -LogOutput argument to specify a log file. By default, SPHS will log to SPHSLog in the current directory. Logs are in UTC and are quite verbose. Error logs are stored in the same file at the moment. 
+
+HTML, CSS, PHP, and Javascript files are served to the browser when a GET request is sent. This allows for normal browsing of web pages. Visiting http://localhost/example.html will display the web page over downloading the file. Notable exclusions are images and media files. Browsing or requesting these resources will download them instead of displaying them in the browser. This limitation may be worked on in the future.
+
+## Roadmapping
+This is the current roadmap/feature list I'm looking at adding. Not all of these will get done, others may also be added. At the time of writing, Dragon's Dogma 2 has just been released. My work efficiency is about to drop to 0. 
+* Add firewall rule creation switch
+  * Currently, manual firewall rules need to be created to allow for external access
+* Add further Action headers
+  * Directory list function
+  * Remote code execution option
+    * Available as a switch, turned off by default
+* Built-out media viewer
+* SSL/TLS
+  * This is more of a way out there, I feel insane, sort of thing
+* Executable release 
+
+
+## Full usage 
+The code is documented to provide as much clarity as possible. At some point, full documentation might be made. However, for now, the module help information is pretty informative on usage. Use `Get-Help Start-HttpServer -Full` to list the built-in help. Or, just look at it in the top of the function declaration. 
+
+### Parameters:
 * URL
-  * The url to bind to. Defaults to * if left blank.
+  * The URL to bind to. Defaults to * if left blank.
 * Port
   * The port to bind to. Defaults to 80 if left blank.
 * Logging
