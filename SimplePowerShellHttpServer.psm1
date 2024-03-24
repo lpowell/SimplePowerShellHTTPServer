@@ -115,6 +115,11 @@ Specify an index.html file.
         Write-Log "Request recieved from: $($Request.RemoteEndPoint)"
         $RequestDetails = @(
             # Expand details like headers at some point
+            # write-host $request.Headers["Content-Type"]
+            # foreach($x in ($request.headers.AllKeys)){
+            #     write-host $x -ForegroundColor red
+            #     write-host $request.headers.GetValues($x)
+            # }
             "`t`t`t`tLocalEndPoint: $($Request.LocalEndPoint)`n"
             "`t`t`t`tURL: $($Request.Url)`n"
             "`t`t`t`tUserAgent: $($Request.UserAgent)`n"
@@ -145,7 +150,7 @@ Specify an index.html file.
                     if($RequestFileInfo.Exists){
                         Write-Log "File exists"
                         # Test if file should be served as webpage
-                        if($RequestFileInfo.Extension -in (".html",".php")){
+                        if($RequestFileInfo.Extension -in (".html",".php",".js",".css")){
                             Write-Log "Serving file as webpage"
                             # Get file contents
                             [string] $responseString = Get-Content $RequestPath
@@ -204,6 +209,67 @@ Specify an index.html file.
                     # If no file is requested, serve the default page.
                     }elseif(((($Request.Url).ToString()) -replace ".*/") -le 1){
                         Write-Log "Serving index file."
+                        $DefaultIndex =@'
+<HTML>
+    <head>
+        <title>How to Upload Files with JavaScript</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <link rel="icon" href="../images/favicon-32x32.png" type="image/png">
+      </head>
+<BODY>
+<h1>Simple PowerShell HTTP Server</h1>
+<p><a href="https://github.com/lpowell/SimplePowerShellHTTPServer" target="_blank">Learn more!</a></p>
+<input id="Shutdown" type="button" value="Shutdown" onclick="Shutdown();" />
+<br />
+<br />
+<!-- <div id="LogOut">
+    <input type="file" name="inputfile" id="inputfile" value="Choose log file">
+    <br>
+ 
+    <pre id="output"></pre>
+</div> -->
+<div id="UploadArea">
+    <h1>Upload File</h1>
+    <div id="UploadBox">
+      <form method="post" enctype="multipart/form-data">
+        <input id="file" name="file" type="file" />
+        <button>Upload</button>
+      </form>
+    </div>
+</div>
+<script>
+    const LogOut = document.getElementById('inputfile');
+    if(LogOut){
+        LogOut.addEventListener('change', function () {
+            var fr = new FileReader();
+            fr.onload = function () {
+                document.getElementById('output')
+                    .textContent = fr.result;
+            };
+            fr.readAsText(LogOut.files[0]);
+        });
+    }
+    function Shutdown(){
+        const currentUrl = window.location.href;
+        fetch(currentUrl, {
+            method: "POST",
+            body: JSON.stringify({
+                userId: 1,
+                title: "Shutdown",
+                completed: false
+            }),
+            headers: {
+                "Action": "Shutdown"
+            }
+        });
+        alert("Server shutdown requested.");
+        location.reload();
+    }
+</script>
+</BODY>
+</HTML>
+'@
                         if($Index){
                             if(-Not [System.IO.File]::Exists($Index)){
                                 # try and see if it's in the local directory
@@ -211,7 +277,7 @@ Specify an index.html file.
                                 if([System.IO.File]::Exists($loc)){
                                     [string] $responseString = Get-Content $loc
                                 }else{
-                                    [string] $responseString = "<HTML><p>Specified index file not found.</p></HTML>"
+                                    [string] $responseString = $DefaultIndex
                                 }                                
 
                             }else{
@@ -220,7 +286,8 @@ Specify an index.html file.
                         }elseif([System.IO.File]::Exists((Get-Location).Path+"\"+"index.html")){
                             [string] $responseString = Get-Content "index.html"
                         }else{
-                            [string] $responseString = "<HTML><p>Testing!</p></HTML>"
+                            Write-Log "Could not find the specified index. Serving the default page."
+                            [string] $responseString = $DefaultIndex
                         }
                         # Create buffer for response
                         [byte[]] $Buffer = [System.Text.Encoding]::UTF8.GetBytes($responseString)
@@ -251,9 +318,78 @@ Specify an index.html file.
                     }
                 }
                 "POST" { 
-                    # Something might happen here at some point. 
-                    # I don't use post for anything other than shutdown commands atm. 
+                    # Create a MemoryStream object to store the InputStream
+                    $memStream = New-Object System.IO.MemoryStream
+                    # Copy the input stream to the memory stream
+                    $Request.InputStream.CopyTo($memStream)
+                    # Create a byte array from the memory stream
+                    [byte[]] $data = $memStream.ToArray() 
+                    # Close the memory stream
+                    $memStream.Close()
+                    # Write the byte array to a temp file
+                    [System.IO.File]::WriteAllBytes((Get-Location).Path+"\"+"temp.dat",$data) | Out-null
+                    # Read the filename from the temp file
+                    $datafilename = (Get-Content "temp.dat" | Select-String "filename" | Out-String) -replace ".*filename=" -replace "`"",""
+                    write-log "Client sent file: $($datafilename.Trim())"
+                    # Find the starting offset of the data by enumerating expected carriage returns
+                    # This is designed with the sample index in mind.
+                    $newline = 0
+                    $offset = 1
+                    foreach($x in $data){
+                        # find four newlines and get offset
+                        if($x -eq 13){
+                            $newline ++
+                        }
+                        if($newline -eq 4){
+                            break;
+                        }
+                        $offset ++
                     }
+                    # New memory stream for trimmed data
+                    $memStream = New-Object System.IO.MemoryStream
+                    # Write the trimmed data to the memory stream
+                    $memStream.write($data, $offset, $data.Length - $offset)
+                    # replace data array with trimmed data
+                    $data = $memStream.ToArray()
+                    # close the memory stream
+                    $memStream.Close()
+                    # reverse data array
+                    [System.array]::reverse($data)
+                    # Find the offset of the last 2 cr 
+                    $newline = 0
+                    $offset = 1
+                    foreach($x in $data){
+                        if($x -eq 13){
+                            $newline++
+                        }
+                        if($newline -eq 2){
+                            break;
+                        }
+                        $offset++
+                    }
+                    # New memory stream for trimmed data
+                    $memStream = New-Object System.IO.MemoryStream
+                    # Write data to stream
+                    $memStream.write($data, $offset, $data.Length - $offset)
+                    # replace data array
+                    $data = $memStream.ToArray()
+                    $memStream.Close()
+                    # reverse data array
+                    [System.Array]::reverse($data)
+                    # write raw bytes to the correct file
+                    [System.IO.File]::WriteAllBytes((Get-Location).Path+"\"+$datafilename.trim(),$data[1..$data.length]) | Out-null
+                    Write-Log "File written to: $((Get-Location).Path+"\"+$datafilename.trim())"
+                    # If the post request came from the sample index, don't send a response
+                    if(!$Request.Headers['sec-ch-ua']){
+                        $Response.StatusCode = [System.Net.HttpStatusCode]::OK
+                        $Response.StatusDescription = "OK"
+                        $Response.OutputStream.Close()
+                    }else{
+                        write-log "Redircted client to base url: $($Request.URL)"
+                        $response.Redirect($request.Url)
+                        $Response.OutputStream.Close()
+                    }
+                }
                 "PUT" { 
                     # Create name based on passed header
                     Write-Log "Client is sending a file for upload"
@@ -297,7 +433,7 @@ Specify an index.html file.
                     $Response.OutputStream.Close()
                 }
                 Default {
-                    # Default NotFound status for methods not supported
+                    # Default not found if no specific handler created
                     $Response.StatusCode = [System.Net.HttpStatusCode]::NotFound
                     $Response.StatusDescription = "NotFound"
                     $Response.OutputStream.Close()

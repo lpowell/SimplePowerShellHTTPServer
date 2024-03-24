@@ -1,19 +1,30 @@
 <HTML>
+    <head>
+        <title>How to Upload Files with JavaScript</title>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" type="text/css" href="styles.css">
+        <link rel="icon" href="../images/favicon-32x32.png" type="image/png">
+      </head>
 <BODY>
 <h1>Simple PowerShell HTTP Server</h1>
 <p><a href="https://github.com/lpowell/SimplePowerShellHTTPServer" target="_blank">Learn more!</a></p>
 <input id="Shutdown" type="button" value="Shutdown" onclick="Shutdown();" />
 <br />
 <br />
-<div id="LogOut">
+<!-- <div id="LogOut">
     <input type="file" name="inputfile" id="inputfile" value="Choose log file">
     <br>
  
     <pre id="output"></pre>
- 
-    <script type="text/javascript">
-
-    </script>
+</div> -->
+<div id="UploadArea">
+    <h1>Upload File</h1>
+    <div id="UploadBox">
+      <form method="post" enctype="multipart/form-data">
+        <input id="file" name="file" type="file" />
+        <button>Upload</button>
+      </form>
+    </div>
 </div>
 <script>
     const LogOut = document.getElementById('inputfile');
@@ -26,14 +37,6 @@
             };
             fr.readAsText(LogOut.files[0]);
         });
-        setTimeout(function (){
-            var fr = new FileReader();
-            fr.onload = function () {
-                document.getElementById('output')
-                    .textContent = fr.result;
-            };
-            fr.readAsText(LogOut.files[0]);
-        }, 5000);
     }
     function Shutdown(){
         const currentUrl = window.location.href;
