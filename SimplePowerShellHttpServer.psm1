@@ -60,7 +60,7 @@ Specify an index.html file.
         # Log File
         [Parameter(Mandatory=$false,HelpMessage="File to store the logs. Defaults to documents.")]
         [string]
-        $LogOutput=[Environment]::GetFolderPath("MyDocuments")+"SPHSLog.txt",
+        $LogOutput="SPHSLog.txt",
         # Index specification
         [Parameter(Mandatory=$false,HelpMessage="Specify an index.html file.")]
         [string]
@@ -212,10 +212,9 @@ Specify an index.html file.
                         $DefaultIndex =@'
 <HTML>
     <head>
-        <title>How to Upload Files with JavaScript</title>
+        <title>Simple PowerShell HTTP Server</title>
         <meta charset="UTF-8">
         <link rel="stylesheet" type="text/css" href="styles.css">
-        <link rel="icon" href="../images/favicon-32x32.png" type="image/png">
       </head>
 <BODY>
 <h1>Simple PowerShell HTTP Server</h1>
@@ -330,6 +329,9 @@ Specify an index.html file.
                     [System.IO.File]::WriteAllBytes((Get-Location).Path+"\"+"temp.dat",$data) | Out-null
                     # Read the filename from the temp file
                     $datafilename = (Get-Content "temp.dat" | Select-String "filename" | Out-String) -replace ".*filename=" -replace "`"",""
+                    If($datafilename -eq $null -Or $datafilename -eq ""){
+                        $datafilename = $request.Headers['Name']
+                    }
                     write-log "Client sent file: $($datafilename.Trim())"
                     # Find the starting offset of the data by enumerating expected carriage returns
                     # This is designed with the sample index in mind.
