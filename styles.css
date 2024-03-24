@@ -5,6 +5,7 @@ html {
 html,
 body {
   height: 100%;
+  overflow: hidden;
 }
 h1 {
   font-family: Arial, Helvetica, sans-serif;
@@ -13,6 +14,9 @@ h1 {
 p {
   font-family: 'Courier New', Courier, monospace;
   color: #999;
+}
+pre {
+
 }
 a {
   color: #999;
@@ -34,8 +38,29 @@ body {
   margin: 0 auto;
   text-align: center;
   border-color: #000;
+  display: none;
 }
-
+#DirectoryArea {
+  background-color: #272727;
+  padding: 20px;
+  border-radius: 25px;
+  width: auto;
+  margin: 0 auto;
+  border-color: #000;
+  display: none;
+  overflow: auto;
+}
+#CommandArea {
+  background-color: #272727;
+  padding: 20px;
+  border-radius: 25px;
+  width: auto;
+  margin: 0 auto;
+  border-color: #000;
+  display: none;
+  max-height: 60%;
+  overflow-y: scroll;
+}
 #UploadBox {
   margin: 0 auto;
 
@@ -47,9 +72,13 @@ body {
 
   background-color: #ddd;
 }
-
 input[type="file"]::file-selector-button {
   margin: 0 20px 10px 0;
+}
+
+#send {
+  position: relative;
+  right: 45%;
 }
 
 input[type="file"] {

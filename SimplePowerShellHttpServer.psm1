@@ -64,7 +64,10 @@ Specify an index.html file.
         # Index specification
         [Parameter(Mandatory=$false,HelpMessage="Specify an index.html file.")]
         [string]
-        $Index
+        $Index,
+        [Parameter(Mandatory=$false,HelpMessage="Enable the remote execution of commands on this server. Commands will execute within the scope of the running process.")]
+        [switch]
+        $CommandExecute
     )
     # Initialize server
     Write-Log "Starting server..."
@@ -109,7 +112,7 @@ Specify an index.html file.
     }
 
     # Prepare to receive requests
-    while($true){
+    :Server while($true){
         $Context = $Listener.GetContext()
         $Request = $Context.Request
         Write-Log "Request recieved from: $($Request.RemoteEndPoint)"
@@ -130,9 +133,70 @@ Specify an index.html file.
         )
         Write-Log "Request details:`n$($RequestDetails)"
         # Switch to case for added actions
-        if(($Request.Headers["Action"]) -And $Request.Headers["Action"] -eq "Shutdown"){
-            Write-Log "Shutdown requested"
-            break
+        # Seems like a hassle at this point. Rewrite will fix it when it happens.
+        if(($Request.Headers["Action"])){
+            switch($Request.Headers["Action"]){
+                "Shutdown" {
+                    Write-Log "Shutdown requested"
+                    break Server
+                }
+                "DirectoryList" {
+                    # Get response object
+                    $Response = $context.Response
+                    Write-Log "DirectoryList request"
+                    # Get file contents
+                    [string] $responseString = $(Get-ChildItem | Out-String)
+                    # Create buffer for response
+                    [byte[]] $Buffer = [System.Text.Encoding]::UTF8.GetBytes($responseString)
+                    # Set content length to the buffer size
+                    $Response.ContentLength64 = $Buffer.Length
+                    # Create an output stream to send the response
+                    [System.IO.Stream] $Output = $Response.OutputStream
+                    # Send response
+                    $Output.Write($Buffer,0,$Buffer.Length)
+                    # Close output stream
+                    $Output.Close()
+                }
+                "CommandExecute" {
+                    if($CommandExecute){
+                        # Get response object
+                        $Response = $context.Response
+                        Write-Log "CommandExecute request"
+                        Write-Log "Client sent the following command: $($Request.Headers["Command"])"
+                        # Get file contents
+                        [string] $responseString = $(Invoke-Expression -Command $Request.Headers["Command"] | Out-String)
+                        # Create buffer for response
+                        [byte[]] $Buffer = [System.Text.Encoding]::UTF8.GetBytes($responseString)
+                        # Set content length to the buffer size
+                        $Response.ContentLength64 = $Buffer.Length
+                        # Create an output stream to send the response
+                        [System.IO.Stream] $Output = $Response.OutputStream
+                        # Send response
+                        $Output.Write($Buffer,0,$Buffer.Length)
+                        # Close output stream
+                        $Output.Close()
+                    }else{
+                        # Get response object
+                        $Response = $context.Response
+                        Write-Log "DirectoryList request"
+                        # Get file contents
+                        [string] $responseString = "CommandExecute not enabled on this server."
+                        # Create buffer for response
+                        [byte[]] $Buffer = [System.Text.Encoding]::UTF8.GetBytes($responseString)
+                        # Set content length to the buffer size
+                        $Response.ContentLength64 = $Buffer.Length
+                        # Create an output stream to send the response
+                        [System.IO.Stream] $Output = $Response.OutputStream
+                        # Send response
+                        $Output.Write($Buffer,0,$Buffer.Length)
+                        # Close output stream
+                        $Output.Close()
+                    }
+                }
+                default {
+
+                }
+            }
         }else {
             # Get response object
             $Response = $context.Response
@@ -142,7 +206,8 @@ Specify an index.html file.
                 # There is no security bundled with the file transfer, do not use this for secure environments.
                 "GET" { 
                     # Build the request path by stripping the url prefix 
-                    $RequestPath=(Get-Location).Path + "\" + ((($Request.Url).ToString()) -replace ".*/")
+                    # $RequestPath=(Get-Location).Path + "\" + ((($Request.Url).ToString()) -replace ".*/")
+                    $RequestPath=(Get-Location).Path+"\"+ ((($request.Url).ToString() -replace "/","\") -split '\\',4)[3]
                     Write-Log "Client requested file:$RequestPath"
                     # Create a fileinfo object
                     $RequestFileInfo = New-Object System.IO.FileInfo($RequestPath)

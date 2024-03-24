@@ -7,7 +7,12 @@
 <BODY>
 <h1>Simple PowerShell HTTP Server</h1>
 <p><a href="https://github.com/lpowell/SimplePowerShellHTTPServer" target="_blank">Learn more!</a></p>
+<div id="HorizontalMenu">
 <input id="Shutdown" type="button" value="Shutdown" onclick="Shutdown();" />
+<input type="button" id="DirectoryList" value="Get Directory list" onclick="DirectoryRequest();">
+<input type="button" id="FileManager" value="Transfer Files" onclick="FileAction();">
+<input type="button" id="DirectoryList" value="ExecuteCommands" onclick="CommandExecution();">
+</div>
 <br />
 <br />
 <!-- <div id="LogOut">
@@ -24,6 +29,17 @@
         <button>Upload</button>
       </form>
     </div>
+</div>
+<div id="DirectoryArea">
+    <pre><p id="DirectoryOut"></p></pre>
+</div>
+<div id="CommandArea">
+    <div id="execute">
+        <p>Execute a Command</p>
+        <input id="Command" type="text" />
+        <button onclick="SendCommand();" id="send">Execute</button>
+    </div>
+        <pre><p id="CommandOut"></p></pre>
 </div>
 <script>
     const LogOut = document.getElementById('inputfile');
@@ -52,6 +68,42 @@
         });
         alert("Server shutdown requested.");
         location.reload();
+    }
+    function DirectoryRequest(){
+        document.getElementById("DirectoryArea").style.display = "block";
+        document.getElementById("CommandArea").style.display = "none";
+        document.getElementById("UploadArea").style.display = "none";
+        const currentUrl = window.location.href;
+        const textReplace = document.getElementById("DirectoryOut");
+        fetch(currentUrl, {
+            headers: {
+                "Action": "DirectoryList"
+            }
+        }).then(response => response.text()).then((response)=>{
+            textReplace.textContent = response;
+        });
+    }
+    function SendCommand(){
+        const currentUrl = window.location.href;
+        const textReplace = document.getElementById("CommandOut");
+        fetch(currentUrl, {
+            headers: {
+                "Action": "CommandExecute",
+                "Command": document.getElementById("Command").value
+            }
+        }).then(response => response.text()).then((response)=>{
+            textReplace.textContent = response;
+        });
+    }
+    function FileAction(){
+        document.getElementById("DirectoryArea").style.display = "none";
+        document.getElementById("CommandArea").style.display = "none";
+        document.getElementById("UploadArea").style.display = "block";
+    }
+    function CommandExecution(){
+        document.getElementById("DirectoryArea").style.display = "none";
+        document.getElementById("CommandArea").style.display = "block";
+        document.getElementById("UploadArea").style.display = "none";
     }
 </script>
 </BODY>
