@@ -20,6 +20,21 @@ GET Request
    
     curl 192.168.10.1:1234/blue.txt --output blue.txt
 
+## Command Execution
+Commands can be executed in the current scope by submitting any request with the Action and Command headers. This must be enabled by starting the server with the CommandExecute switch. Commands cannot be executed by default. Commands can be executed from the command line or the included index page.
+
+Example request
+
+    curl 192.168.10.1:1234 -H "Action: CommandExecute" -H "Command: Get-Process"
+
+The server directory can also be queried via command line or index. This operation is separate from command execution and cannot currently be turned off. 
+
+Example request
+
+    Invoke-WebRequest 192.168.10.1:1234 -Headers @{"Action"="DirectoryList"}
+
+All command execution results are returned as strings.  
+
 ## Server Operation
 The server can be shut down by sending any request with the Action header. Additionally, the sample index page includes a shutdown button.
 
@@ -36,8 +51,8 @@ This is the current roadmap/feature list I'm looking at adding. Not all of these
 * Add firewall rule creation switch
   * Currently, manual firewall rules need to be created to allow for external access
 * Add further Action headers
-  * Directory list function
-  * Remote code execution option
+  * ~~Directory list function~~
+  * ~~Remote code execution option~~
     * Available as a switch, turned off by default
 * Built-out media viewer
 * SSL/TLS
