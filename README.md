@@ -1,5 +1,5 @@
 # Simple PowerShell HTTP Server
-A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work.
+A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work. SPHS requires PowerShell 6+, preferably PowerShell 7+. 
 
 
 ## File Upload
@@ -48,6 +48,10 @@ HTML, CSS, PHP, and Javascript files are served to the browser when a GET reques
 
 ## Roadmapping
 This is the current roadmap/feature list I'm looking at adding. Not all of these will get done, others may also be added. At the time of writing, Dragon's Dogma 2 has just been released. My work efficiency is about to drop to 0. 
+* Create randomized API key to authenticate communications
+  * Use for commands, direwctory listing, and upload/download. Various levels of strictness.
+* JSON configuration support
+  * Deploy from config 
 * Add firewall rule creation switch
   * Currently, manual firewall rules need to be created to allow for external access
 * Add further Action headers
@@ -74,3 +78,5 @@ The code is documented to provide as much clarity as possible. At some point, fu
   * File to store the logs. Defaults to documents.
 * Index
   * Specify an index.html file.
+* CommandExecute
+  * Allow users to execute commands against the server. 
