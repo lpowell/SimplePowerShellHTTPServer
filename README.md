@@ -44,7 +44,7 @@ Server shutdown
 
 SPHS logs to the console by default. Currently, this cannot be turned off. Optionally, SPHS can log to a file. Use the -Logging switch to enable file output, and the -LogOutput argument to specify a log file. By default, SPHS will log to SPHSLog in the current directory. Logs are in UTC and are quite verbose. Error logs are stored in the same file at the moment. 
 
-HTML, CSS, PHP, and Javascript files are served to the browser when a GET request is sent. This allows for normal browsing of web pages. Visiting http://localhost/example.html will display the web page over downloading the file. Notable exclusions are images and media files. Browsing or requesting these resources will download them instead of displaying them in the browser. This limitation may be worked on in the future.
+HTML, CSS, PHP, and Javascript files are served to the browser when a GET request is sent. This allows for normal browsing of web pages. Visiting http://localhost/<example\>.html will display the web page over downloading the file. Notable exclusions are images and media files. Browsing or requesting these resources will download them instead of displaying them in the browser. This limitation may be worked on in the future.
 
 ## Roadmapping
 This is the current roadmap/feature list I'm looking at adding. Not all of these will get done, others may also be added. At the time of writing, Dragon's Dogma 2 has just been released. My work efficiency is about to drop to 0. 
