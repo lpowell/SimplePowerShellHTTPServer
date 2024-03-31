@@ -48,10 +48,11 @@ HTML, CSS, PHP, and Javascript files are served to the browser when a GET reques
 
 ## Roadmapping
 This is the current roadmap/feature list I'm looking at adding. Not all of these will get done, others may also be added. At the time of writing, Dragon's Dogma 2 has just been released. My work efficiency is about to drop to 0. 
-* Create randomized API key to authenticate communications
+* Create randomized key to authenticate communications
   * Use for commands, direwctory listing, and upload/download. Various levels of strictness.
 * JSON configuration support
-  * Deploy from config 
+  * Deploy from config
+* Download field in default index
 * Add firewall rule creation switch
   * Currently, manual firewall rules need to be created to allow for external access
 * Add further Action headers
