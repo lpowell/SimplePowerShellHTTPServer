@@ -1,5 +1,5 @@
 # Simple PowerShell HTTP Server
-A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work. SPHS requires PowerShell 6+, preferably PowerShell 7+. 
+A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work. SPHS requires PowerShell 6+, preferably PowerShell 7+. Real docs will come once the roadmap is nearing completion (No major changes). This readme will be infrequently updated. Some information may be out of date.
 
 
 ## File Upload
