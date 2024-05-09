@@ -43,9 +43,12 @@ Function Start-Server{
     # Create server listener 
     try{
         $prefix = "http://"+$URL+":"+$Port+"/"
+        $prefxhttps = "https://"+$URL+":"+$SSLPort+"/"
         Write-Log "Initiating server on $Prefix" 1
         $Server = New-Object System.Net.HttpListener
-        $Server.Prefixes.Add($Prefix)
+        foreach($x in [string[]] @($prefix,$prefxhttps)){
+            $Server.Prefixes.Add($x)
+        }
         $Server.Start()
     }    
     catch [System.Net.HttpListenerException] {
@@ -795,6 +798,9 @@ Function Start-HttpServer{
         [Parameter(Mandatory=$false,ValueFromPipeline=$True,HelpMessage="The port to bind to. Defaults to 80 if left blank.")]
         [string]
         $port='80',
+        [Parameter(Mandatory=$false,ValueFromPipeline=$True,HelpMessage="The port to bind to for https. Defaults to 443 if left blank.")]
+        [string]
+        $sslport='443',
         # Log File
         [Parameter(Mandatory=$false,HelpMessage="File to store the logs. Defaults to documents.")]
         [string]
