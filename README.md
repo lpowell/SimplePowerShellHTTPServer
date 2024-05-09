@@ -1,88 +1,106 @@
-# Simple PowerShell HTTP Server
-A module for creating an HTTP server. SPHS is written entirely in PowerShell and uses the System.Net.HttpListener .Net class to operate. SPHS can be served on any port. It functions as a file upload/download option and a basic HTTP server for serving web content. Future work will see these options expand and improve. SPHS started as a PowerShell native solution for another [project](https://github.com/lpowell/PowerShellMalwareExamples/tree/main/ExampleSamples) but has evolved into its own work. SPHS requires PowerShell 6+, preferably PowerShell 7+. Real docs will come once the roadmap is nearing completion (No major changes). This readme will be infrequently updated. Some information may be out of date.
+# Simple PowerShell Http Server
+SPHS is a PowerShell implementation of the .Net HttpListener class. SPHS includes a simple file upload/download system, HTTP and web content server, and remote command execution abilities. The primary function of SPHS is to provide a simple method for local testing of systems and functions that require HTTP. SPHS is not intended to be used in secure or production environments. 
+
+## Overview
+The primary method of use is through the `Start-HttpServer` startup command. This will attempt to create an http server with the following default bindings:
+
+```
+{
+    URL: *,
+    Port: 80,
+    APIKey: Default,
+    Index: Default,
+    Path: Default,
+    LogFile: Default,
+    LogLevel: Default
+}
+```
+To exapnd on this, the basic server startup creates an HttpListener session that binds to all available addresses on port 80. The operational path is set to the working directory, the index default will be served, and logging is set to operational logging only. 
+
+These parameters can be set on execution or loaded via a JSON configuration file in the above format.
+
+Currently SSL is not *officially* supported. However, there is SSL support baked into the code itself. *Theoretically*, with a proper certificate set up, SSL *should* work. This has not been tested. 
+
+## HTML and Web Content 
+SPHS serves as a limited, but functional, HTML and web content server. By default, SPHS will attempt to serve .html, .js, ,.css, and .php, files as web content. This allows SPHS to serve simple websites. 
+
+Media files are not yet supported. Most images, gifs, and short form media *should* work fine. However, large media and videos will not load correctly. These files can still be downloaded from the server using the download functionality. 
+
+File paths are handled automatically, and SPHS uses the preconfigured Path parameter to determine where files are located. Examples of file handling and web content serving can be found in the default index in the script. 
+
+## File Upload and Download
+Files can be uploaded and downloaded from the server. There are several methods for uploading and downloading thatare supported. Both CLI and browser functionalities exist. In the case of extremely large files, there may be some issues not encountered during testing.
+
+### Upload
+Files can be uploaded through the upload example in the default index. They can also be uploaded through the CLI using a PUT request or a file. Files uploaded through the CLI must include a 'Name' header or they will be saved as a data file.
+
+`Invoke-WebRequest -Method PUT -Uri 127.0.0.1:80 -InFile foo.txt -Headers @{"Name"="foo.txt"}`
+
+Uploads using the sample index use POST requests via the HTML `<form>` tag to send data to the server.
+
+### Downloads
+Files can be downloaded by simply browsing to the location in any web browser. They can also be pulled from the server through the CLI using any standard GET request.
+
+`curl 127.0.0.1:80/bar.txt --output bar.txt`
+
+## Remote Command Execution
+SPHS supports remote command execution on the local machine through the use of the generated API key value. The sample index contains an example field for executing and retrieving commands from the server. Commands return a string containing the result.
+
+`curl 127.0.0.1:80 -H "Action: CommandExecute" -H "Command: Get-Process" -H "x-api-key: <key>"`
+
+The available commands are:
+* CommandExecute
+* DirectoryList
+* Shutdown
 
 
-## File Upload
-Files can be uploaded via post requests. An example is included in the provided index.html page. File upload can be sent through the command line as well, using either POST or PUT requests. Command line requests must include a name header.
-    
-PUT Request
-    
-    Invoke-WebRequest 192.168.10.1:1234 -method PUT -InFile red.txt -Headers @{"Name"="red.txt"} 
+## CLI Usage
+The cmdlet is called `Start-HttpServer` and includes a full `Get-Help` page with examples. 
 
-POST Request
-    
-    Invoke-WebRequest 192.168.10.1:1234 -method POST -Infile red.txt -Headers @{"Name"="red.txt"}
-
-## File Download
-Files can be downloaded from the command line or through the browser. For example, browsing to http://localhost/red.txt will result in the server sending red.txt for download. SPHS serves files in the directory it's running in. Files may also be downloaded from the command line.
-
-GET Request
-   
-    curl 192.168.10.1:1234/blue.txt --output blue.txt
-
-## Command Execution
-Commands can be executed in the current scope by submitting any request with the Action and Command headers. An API header must accompany all commands and administrative activities `x-api-key:<APIKey>`. Commands can be executed from the command line or the included index page.
-
-Example request
-
-    curl 192.168.10.1:1234 -H "Action: CommandExecute" -H "Command: Get-Process"
-
-The server directory can also be queried via command line or index. This operation is separate from command execution and cannot currently be turned off. 
-
-Example request
-
-    Invoke-WebRequest 192.168.10.1:1234 -Headers @{"Action"="DirectoryList"}
-
-All command execution results are returned as strings.  
-
-## Server Operation
-The server can be shut down by sending any request with the Action header. Additionally, the sample index page includes a shutdown button.
-
-Server shutdown
-
-    Invoke-WebRequest 192.168.10.1:1234 -Method POST -Headers @{"Action"="Shutdown"}
-
-SPHS logs to the console by default. Currently, this cannot be turned off. Optionally, SPHS can log to a file. Use the -Logging switch to enable file output, and the -LogOutput argument to specify a log file. By default, SPHS will log to SPHSLog in the current directory. Logs are in UTC and are quite verbose. Error logs are stored in the same file at the moment. 
-
-HTML, CSS, PHP, and Javascript files are served to the browser when a GET request is sent. This allows for normal browsing of web pages. Visiting http://localhost/<example\>.html will display the web page over downloading the file. Notable exclusions are images and media files. Browsing or requesting these resources will download them instead of displaying them in the browser. This limitation may be worked on in the future.
-
-## Roadmapping
-This is the current roadmap/feature list I'm looking at adding. Not all of these will get done, others may also be added. At the time of writing, Dragon's Dogma 2 has just been released. My work efficiency is about to drop to 0. 
-* ~~Create randomized key to authenticate communications~~
-  * ~~Use for commands, directory listing, and upload/download. Various levels of strictness.~~
-* ~~JSON configuration support~~
-  * ~~Deploy from config~~
-* Download field in default index
-* Add firewall rule creation switch
-  * Currently, manual firewall rules need to be created to allow for external access
-* ~~Add further Action headers~~
-  * ~~Directory list function~~
-  * ~~Remote code execution option~~
-    * ~~Available as a switch, turned off by default~~
-* Built-out media viewer
-* SSL/TLS
-  * This is more of a way out there, I feel insane, sort of thing
-* Executable release 
-
-
-## Full usage 
-The code is documented to provide as much clarity as possible. At some point, full documentation might be made. However, for now, the module help information is pretty informative on usage. Use `Get-Help Start-HttpServer -Full` to list the built-in help. ~~Or, just look at it in the top of the function declaration.~~
-The module now features a dedicated help function. This can be accessed with `Start-HttpServer -help`
-
-### Parameters:
+The available CLI parameters are:
 * URL
-  * The URL to bind to. Defaults to * if left blank.
+    * The address to bind to during execution. Defaults to all addresses.
 * Port
-  * The port to bind to. Defaults to 80 if left blank.
-* LogLevel
-  * The level of logging to use. Supports three levels (1-3). Operational, Security, and All. 
+    * The port to bind to during execution. Defaults to 80.
+* SSLPort
+    * *This is not currently supported.* Defaults to port 443.
 * LogFile
-  * File to store the logs. Defaults to documents.
+    * The file logs are written to. Defaults to SPHS.log.
+* LogLevel
+    * The level of logging to use during execution.
+    * LOG LEVELS
+        * OPERATIONAL
+        * SECURITY
+        * ALL
 * Index
-  * Specify an index.html file.
+    * The HTML index page to serve. Defaults to the included html page.
 * APIKey
-  * Specify an API key to use for server administration. A random API key is generated by default.
+    * The API key used to execute commands on the server. Defaults to a random key that is printed to the console on startup.
 * Path
-  * The operational path of the server. Defaults to the operational directory at execution.
+    * The path the server should operate out of. Defaults to the working directory.
+* Load
+    * Used to load JSON configuration files.
+* Help
+    * Displays a help page.
 
 
+
+
+## Logging
+SPHS supports three levels of logging. These increase in verbosity. To display logs in the console, use the `-Verbose` switch during invocation.
+
+
+OPERATIONAL LOGS [DEFAULT]
+
+Logs dealing with basic server operations.
+Errors are written to both the error log and the OPERATIONAL log. 
+
+SECURITY LOGS
+
+Logs dealing with connection requests and responses.
+Expands headers, Addresses, and other identifying information.
+Includes OPERATIONAL logs. 
+
+ALL
+
+All logs, including extraneous operational logs
